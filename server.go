@@ -70,7 +70,29 @@ func withdraw(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
+func buy(w http.ResponseWriter, r *http.Request) {
+	queryValues := r.URL.Query()
+	market := queryValues.Get("market")
+	quantity := queryValues.Get("quantity")
+	rate := queryValues.Get("rate")
+	apikey := queryValues.Get("apikey")
+	apisecret := queryValues.Get("apisecret")
+	nonce := fmt.Sprint(time.Now().Unix() % 1000000000)
+	uri := "https://bleutrade.com/api/v2/market/buylimit?apikey=" + apikey + "&nonce=" + nonce
+
+	uri += "&market=" + market
+	uri += "&quantity=" + quantity
+	uri += "&rate=" + rate
+	sign := genHash(apisecret, uri)
+	uri += "&apisign=" + sign
+	fmt.Println(uri)
+	resp, _ := http.Get(uri)
+	body, _ := ioutil.ReadAll(resp.Body)
+	w.Write([]byte(body))
+}
+
 func main() {
+	http.HandleFunc("/buy", buy)
 	http.HandleFunc("/balance", balance)
 	http.HandleFunc("/balances", balances)
 	http.HandleFunc("/withdraw", withdraw)
